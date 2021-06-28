@@ -109,7 +109,7 @@ async function createPost({ authorId, title, content, tags = [] }) {
       rows: [post],
     } = await client.query(
       `
-      INSERT INTO posts ("authorId", title, content)
+      INSERT INTO posts("authorId", title, content)
       VALUES ($1, $2, $3)
       RETURNING *;
     `,
@@ -218,6 +218,13 @@ async function getPostById(postId) {
       [postId]
     );
 
+    if (!post) {
+      throw {
+        name: "PostNotFoundError",
+        message: "Could not find a post with that postId",
+      };
+    }
+
     const { rows: tags } = await client.query(
       `
       SELECT tags.*
@@ -295,7 +302,6 @@ async function createTags(tagList) {
       `,
       tagList
     );
-    console.log(rows);
     return rows;
   } catch (error) {
     throw error;
@@ -304,7 +310,6 @@ async function createTags(tagList) {
 
 async function createPostTag(postId, tagId) {
   try {
-    console.log(postId, tagId);
     await client.query(
       `
       INSERT INTO post_tags("postId", "tagId")
@@ -333,7 +338,6 @@ async function getAllTags() {
 
 async function addTagsToPost(postId, tagList) {
   try {
-    console.log(postId, tagList);
     const createPostTagPromises = tagList.map((tag) =>
       createPostTag(postId, tag.id)
     );
